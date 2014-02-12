@@ -1,0 +1,161 @@
+<apex:page controller="ApexCodeCoverageList_Con" sidebar="false">
+    
+    <c:importvisualstrap />
+    <apex:includeScript value="{!$Resource.JSRender}"/>
+    
+    <script>
+        
+        function getCodeCoverage(){                       
+            var rBtn = $('#refreshBtn').button('loading');
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ApexCodeCoverageList_Con.fetchCodeCoverage}',
+                function(result,event){
+                    if(event.status){
+                        console.log(result);
+                        var parsedResult = jQuery.parseJSON(result);
+                        /*render html using jsrender and attach it to the table*/
+                        $('#coverageTableBody').html($( "#coverageRowTemplate" ).render( parsedResult.records ));
+                    }
+                    else{
+                        alert(event.message);
+                    }
+                    rBtn.button('reset');
+                },
+                {escape: false}
+            );            
+        }
+        
+        function getOrgCoverage(){
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ApexCodeCoverageList_Con.fetchOrgCoverage}',
+                function(result,event){
+                    if(event.status){
+                        var parsedResult = jQuery.parseJSON(result);
+                        $('#orgCoverage').html(parsedResult.records[0].PercentCovered);
+                    }
+                    else{
+                        alert(event.message);
+                    }
+                    
+                },
+                {escape: false}
+            );       
+        }
+        
+        function getCoverage(){
+            getOrgCoverage();
+            getCodeCoverage();
+        }
+        
+        /*JSrender helper methods*/
+        function initHelperMethods(){
+            $.views.helpers({
+                calculatePercentage: function(NumLinesUncovered,NumLinesCovered){
+                    return ((NumLinesCovered/(NumLinesCovered+NumLinesUncovered))*100).toFixed(2);
+                },
+                totalLines:function(NumLinesUncovered,NumLinesCovered){
+                    return NumLinesUncovered + NumLinesCovered;
+                },
+                rowStatusClass: function(NumLinesUncovered,NumLinesCovered){
+                    var sclass='danger';
+                    var percentG = ((NumLinesCovered/(NumLinesCovered+NumLinesUncovered))*100).toFixed(2);
+                    if(percentG >= 90){
+                        sclass = 'success'
+                    }
+                    else if(percentG >= 75){
+                        sclass = 'warning';
+                    }
+                    
+                    return sclass;
+                }
+            });
+        }
+        
+        $(function(){
+            initHelperMethods();
+            getCoverage();
+        })
+
+    </script>
+    <!-- JS render template -->
+    <script id="coverageRowTemplate" type="text/x-jsrender">
+        <tr class="{{:~rowStatusClass(NumLinesUncovered,NumLinesCovered)}}">
+            <td width="20px">
+                <a href="/{{>ApexClassOrTriggerId}}" target="_blank" class="btn btn-xs btn-info"> <span class="glyphicon glyphicon-export"/> view </a>
+            </td>
+            <td>
+                {{>ApexClassOrTrigger.Name}}
+            </td>
+            <td>
+                {{>NumLinesUncovered}}
+            </td>
+            <td>
+                {{>NumLinesCovered}}
+            </td>
+            <td>
+                {{:~totalLines(NumLinesUncovered,NumLinesCovered)}}
+            </td>            
+            <td>
+                {{:~calculatePercentage(NumLinesUncovered,NumLinesCovered )}}
+            </td>
+        </tr>
+    </script>
+    <c:visualstrapblock >
+         
+        <c:panel type="primary">
+            <center>
+               <c:pageheader icon="cog" title="Apex Code Coverage" subtitle="All Classes"/>
+               <div class="text-muted" style="position:absolute;top:20px;right:20px">Using Tooling API, JS Remoting, JSRender and VisualStrap</div>
+             </center>
+            
+            <apex:outputPanel layout="block" styleClass="well well-sm">
+                <center>
+                    <button id="refreshBtn" onclick="getCoverage();return false;" class="btn btn-success" data-loading-text="Refreshing...">
+                        <c:glyph icon="refresh"/> Refresh
+                    </button>
+                </center>
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="row">
+                
+                <apex:outputPanel layout="block" styleClass="col-md-10">
+                    <table class="table table-bordered table-striped table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Action
+                                </th>
+                                <th>
+                                    Apex Class/ Trigger
+                                </th>
+                                <th>
+                                    Lines Not Covered
+                                </th>
+                                <th>
+                                    Lines Covered
+                                </th>
+                                <th>
+                                    Total Lines
+                                </th>
+                                <th>
+                                    Coverage Percentage
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="coverageTableBody">
+                        
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" styleClass="col-md-2">
+                    <c:panel type="primary" title="Overall Coverage" >
+                        <center>
+                            <h2 style="font-size:54"><span id="orgCoverage"/> %</h2>
+                            <p class="text-muted infolabel">Across all apex classes and triggers</p> 
+                        </center>
+                    </c:panel>
+                </apex:outputPanel>
+                
+            </apex:outputPanel>
+        </c:panel>
+    </c:visualstrapblock>
+</apex:page>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Apex Code Coverage List Page</fullName>
+    <description>A visualforce page shows code coverage across the org in a list view fashion. VisualStrap Managed package in needed to install this page.</description>
+    <types>
+        <members>ApexCodeCoverageList_Con</members>
+        <members>ApexCodeCoverageList_Con_Mock_Generator</members>
+        <members>ApexCodeCoverageList_Con_Test</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>glyph</members>
+        <members>importvisualstrap</members>
+        <members>pageheader</members>
+        <members>panel</members>
+        <members>visualstrapblock</members>
+        <name>ApexComponent</name>
+    </types>
+    <types>
+        <members>ApexCodeCoverageList</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>JSRender</members>
+        <members>VisualStrap_Resources</members>
+        <name>StaticResource</name>
+    </types>
+    <version>27.0</version>
+</Package>
