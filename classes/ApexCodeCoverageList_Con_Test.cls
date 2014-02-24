@@ -9,5 +9,15 @@ private class ApexCodeCoverageList_Con_Test{
         Test.setMock(HttpCalloutMock.class, new ApexCodeCoverageList_Con_Mock_Generator());
         System.assertNotEquals(NULL,ApexCodeCoverageList_Con.fetchOrgCoverage());
         System.assertNotEquals(NULL,ApexCodeCoverageList_Con.fetchCodeCoverage());
+        System.assertNotEquals(NULL,ApexCodeCoverageList_Con.fetchClassOrTriggerById(
+                                                                                [
+                                                                                    SELECT 
+                                                                                        Id 
+                                                                                    FROM 
+                                                                                        ApexClass 
+                                                                                    WHERE 
+                                                                                        Name='ApexCodeCoverageList_Con_Test'
+                                                                                    ].Id)
+                                                                                );
     }
 }

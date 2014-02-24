@@ -11,6 +11,7 @@
     <types>
         <members>glyph</members>
         <members>importvisualstrap</members>
+        <members>modal</members>
         <members>pageheader</members>
         <members>panel</members>
         <members>visualstrapblock</members>
@@ -22,6 +23,7 @@
     </types>
     <types>
         <members>JSRender</members>
+        <members>SyntaxHighlighter</members>
         <members>VisualStrap_Resources</members>
         <name>StaticResource</name>
     </types>

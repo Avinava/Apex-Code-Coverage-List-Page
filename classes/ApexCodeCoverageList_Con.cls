@@ -11,10 +11,20 @@ public class ApexCodeCoverageList_Con{
         ORG_INSTANCE = getInstance();
         TOOLINGAPI_ENDPOINT = 'https://'+ORG_INSTANCE+'.salesforce.com/services/data/v29.0/tooling/';
     }
+    
+    @RemoteAction
+    public static String fetchClassOrTriggerById( Id sobjId){
+        String body='';
+        String sObjectName = sobjId.getSobjectType().getDescribe().getName();
+        for(Sobject sobj : Database.query('SELECT Body FROM '+sObjectName+' WHERE Id=:sobjId')){
+            body = (String)sobj.get('Body');
+        }
+        return body;
+    }
 
     @RemoteAction
     public static String fetchCodeCoverage(){
-        return sendToolingQueryRequest('SELECT+NumLinesCovered,ApexClassOrTriggerId,ApexClassOrTrigger.Name,NumLinesUncovered+FROM+ApexCodeCoverage');
+        return sendToolingQueryRequest('SELECT+NumLinesCovered,ApexClassOrTriggerId,ApexClassOrTrigger.Name,NumLinesUncovered,Coverage+FROM+ApexCodeCoverage');
     }
     
     @RemoteAction

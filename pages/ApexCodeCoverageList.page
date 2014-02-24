@@ -3,16 +3,22 @@
     <c:importvisualstrap />
     <apex:includeScript value="{!$Resource.JSRender}"/>
     
+    <apex:includeScript value="{!URLFOR($Resource.SyntaxHighlighter, 'scripts/xregexp-min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.SyntaxHighlighter, 'src/shCore.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.SyntaxHighlighter, 'scripts/shBrushJava.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.SyntaxHighlighter, 'styles/shCore.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.SyntaxHighlighter, 'styles/shThemeDefault.css')}"/>
     <script>
-        
+        var coverageResults =[];
         function getCodeCoverage(){                       
             var rBtn = $('#refreshBtn').button('loading');
             Visualforce.remoting.Manager.invokeAction(
                 '{!$RemoteAction.ApexCodeCoverageList_Con.fetchCodeCoverage}',
                 function(result,event){
                     if(event.status){
-                        console.log(result);
+                        //console.log(result);                        
                         var parsedResult = jQuery.parseJSON(result);
+                        coverageResults = parsedResult.records;
                         /*render html using jsrender and attach it to the table*/
                         $('#coverageTableBody').html($( "#coverageRowTemplate" ).render( parsedResult.records ));
                     }
@@ -71,6 +77,32 @@
             });
         }
         
+        function showCoverage(classId){
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ApexCodeCoverageList_Con.fetchClassOrTriggerById}',classId,
+                function(result,event){
+                    if(event.status){
+                        $('#coverageDetail').html("<pre class='brush: java'>"+result+"</pre>");
+                        $('#codeCoveragePopup').modal('show');
+                        $.each(coverageResults,function(){
+                            console.log(result);
+                            if(this.ApexClassOrTriggerId == classId){
+                                console.log(this.Coverage.coveredLines);
+                                SyntaxHighlighter.defaults['highlight'] = this.Coverage.coveredLines;
+                                SyntaxHighlighter.highlight();
+                            }
+                        })
+                        
+                    }
+                    else{
+                        alert(event.message);
+                    }
+                    
+                },
+                {escape: false}
+            );     
+        }
+        
         $(function(){
             initHelperMethods();
             getCoverage();
@@ -81,10 +113,10 @@
     <script id="coverageRowTemplate" type="text/x-jsrender">
         <tr class="{{:~rowStatusClass(NumLinesUncovered,NumLinesCovered)}}">
             <td width="20px">
-                <a href="/{{>ApexClassOrTriggerId}}" target="_blank" class="btn btn-xs btn-info"> <span class="glyphicon glyphicon-export"/> view </a>
+                <a href="#" class="btn btn-xs btn-{{:~rowStatusClass(NumLinesUncovered,NumLinesCovered)}}" onclick="showCoverage('{{>ApexClassOrTriggerId}}');return false;"> <span class="glyphicon glyphicon-export"/> coverage </a>
             </td>
             <td>
-                {{>ApexClassOrTrigger.Name}}
+                <a href="/{{>ApexClassOrTriggerId}}" target="_blank" >{{>ApexClassOrTrigger.Name}}</a>
             </td>
             <td>
                 {{>NumLinesUncovered}}
@@ -100,6 +132,13 @@
             </td>
         </tr>
     </script>
+    
+    <style>
+        .modal-dialog{
+            width:90%!important;
+        }
+    </style>
+    
     <c:visualstrapblock >
          
         <c:panel type="primary">
@@ -157,5 +196,12 @@
                 
             </apex:outputPanel>
         </c:panel>
+        
+        <c:modal title="Covered Lines" id="codeCoveragePopup" style="width:90%">
+            <div id="coverageDetail"/>
+            <apex:outputPanel layout="block" styleClass="modal-footer">
+                <button class="btn btn-danger" data-dismiss="modal">Close</button>
+          </apex:outputPanel>
+        </c:modal>
     </c:visualstrapblock>
 </apex:page>
